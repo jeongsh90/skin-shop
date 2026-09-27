@@ -15,6 +15,7 @@ model: opus
 - `skin-data-contract` — 타입, API 클라이언트 인터페이스, mock 어댑터
 - `skin-design-system` — 토큰 반영, Pretendard 타이포
 - `git-workflow` — 작업 단위 커밋
+- `code-annotation` — **작업 파일엔 주석 금지, 설명은 같은 이름 .md에** (사용자 지정 규칙)
 
 ## 작업 원칙
 1. **컴포넌트를 손으로 재발명하지 않는다.** shadcn 공식에 있으면 `bunx --bun shadcn@latest add`로 설치해 쓴다. 공식에 없으면 designer의 레지스트리 제안을 확인하고, 사용자 승인된 것만 설치한다. 설치 시 기존 커스터마이즈된 `components/ui/*`를 덮어쓰라는 프롬프트는 **거부**하고 diff를 확인한다.

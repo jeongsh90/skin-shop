@@ -17,9 +17,12 @@ description: "다잇누몰(홈페이지 스킨 판매 사이트) 구축 에이�
 |---|---|---|---|---|
 | skin-planner | skin-planner | IA·기능명세·데이터 요구 | skin-shop-ia, skin-data-contract | `01_planner_*.md` |
 | skin-designer | skin-designer | 디자인 브리프·토큰·레지스트리 제안 | skin-design-system, impeccable | `02_designer_*.md` |
-| skin-frontend-dev | skin-frontend-dev | React 구현·Lenis·mock 계층 | react-shadcn-setup, lenis-smooth-scroll, skin-data-contract, skin-design-system, git-workflow | `src/`, `03_frontend_progress.md` |
-| skin-backend-dev | skin-backend-dev | 서버·DB·인증·결제·배포(3단계 전용) | skin-server-integration, skin-data-contract, git-workflow | `server/`, `04_backend_*.md` |
-| skin-qa | skin-qa | 점진 교차검증·Playwright 실측 | skin-qa-checklist, lenis-smooth-scroll | `05_qa_report_*.md` |
+| skin-frontend-dev | skin-frontend-dev | React 구현·Lenis·mock 계층 | react-shadcn-setup, lenis-smooth-scroll, skin-data-contract, skin-design-system, git-workflow, code-annotation | `src/`, `03_frontend_progress.md` |
+| skin-backend-dev | skin-backend-dev | 서버·DB·인증·결제·배포(3단계 전용) | skin-server-integration, skin-data-contract, git-workflow, code-annotation | `server/`, `04_backend_*.md` |
+| skin-qa | skin-qa | 점진 교차검증·Playwright 실측 | skin-qa-checklist, lenis-smooth-scroll, code-annotation | `05_qa_report_*.md` |
+
+## 전역 규칙 (사용자 지정)
+- **작업 파일에는 주석을 달지 않는다.** 설명·의도·출처는 같은 폴더의 같은 이름 `.md`(예: `Header.tsx` → `Header.md`)에 적는다 — `code-annotation` 스킬. 코드를 쓰는 모든 에이전트 프롬프트에 이 규칙을 명시한다.
 
 ## 워크플로우
 

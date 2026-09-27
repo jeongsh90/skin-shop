@@ -8,7 +8,10 @@
 
 **진행 순서:** 1단계 사용자 웹페이지 → 2단계 관리자페이지 → 3단계 서버 연결(맨 마지막). 단계 전환 전 사용자 확인 필수. 커뮤니티 레지스트리(https://ui.shadcn.com/docs/directory) 컴포넌트는 사용자 승인 후 설치.
 
+**코드 규칙:** 작업 파일에는 주석을 달지 않는다. 설명은 같은 폴더의 같은 이름 `.md` 파일(예: `Header.tsx` → `Header.md`)에 적는다 — `code-annotation` 스킬.
+
 **변경 이력:**
 | 날짜 | 변경 내용 | 대상 | 사유 |
 |------|----------|------|------|
 | 2026-09-27 | 초기 구성 — 에이전트 5종(skin-planner/designer/frontend-dev/backend-dev/qa), 스킬 9종(skin-shop-orchestrator, skin-shop-ia, skin-data-contract, react-shadcn-setup, lenis-smooth-scroll, skin-design-system, skin-server-integration, skin-qa-checklist, git-workflow). 실행 모드는 서브 에이전트 파이프라인+생성-검증(환경에 TeamCreate 없음), 페이지 그룹마다 점진 QA | 전체 | 스킨 판매 사이트 구축 요청(웹→관리자→서버 순, shadcn+레지스트리, Lenis 전 페이지, jeongsh90 git) |
+| 2026-09-27 | `code-annotation` 스킬 추가(작업 파일 주석 금지, 같은 이름 .md에 설명), frontend-dev/backend-dev/qa 에이전트·오케스트레이터·qa-checklist·react-shadcn-setup에 연결 | skills/code-annotation(신규), agents/{skin-frontend-dev,skin-backend-dev,skin-qa}, skills/{skin-shop-orchestrator,skin-qa-checklist,react-shadcn-setup}, CLAUDE.md | "작업파일에는 주석을 달지않는다, 대신 같은파일이름의 md파일 생성 후 그 파일에 주석" 요구사항 |

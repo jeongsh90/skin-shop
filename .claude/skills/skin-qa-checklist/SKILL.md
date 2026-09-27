@@ -18,6 +18,7 @@ description: "다잇누몰 사용자 웹/관리자/서버 연결 단계별 QA �
 - [ ] 페이지 컴포넌트가 seed/mock을 직접 import하지 않는지 (`grep -r "seed" src/app`)
 - [ ] 하드코딩 색/폰트(`#[0-9a-f]{3,6}`, `font-family:`, `Inter`) 검색 — 토큰 외 사용 목록화
 - [ ] 관리자 코드가 사용자 번들에 섞이지 않음(빌드 청크 확인)
+- [ ] 작업 파일 주석 0건, 짝 md 누락/고아 md 없음 (`code-annotation` 점검 명령)
 
 ## 2. 실측 (Playwright MCP)
 - 폭 360 / 768 / 1024 / 1440 각각 스크린샷 → 가로 스크롤 발생 여부(`document.documentElement.scrollWidth > innerWidth`), 잘림, 겹침

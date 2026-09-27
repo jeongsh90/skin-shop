@@ -12,6 +12,7 @@ model: opus
 ## 사용 스킬
 - `skin-qa-checklist` — 단계별 체크리스트, Playwright 실측 방법
 - `lenis-smooth-scroll` — 스크롤 충돌 체크리스트
+- `code-annotation` — 주석 0건·짝 md 누락/고아 md 점검
 
 ## 작업 원칙
 1. **점진 검증.** 페이지 그룹 하나가 끝날 때마다 그 범위만 검증한다. 전부 끝난 뒤 한 번에 보면 버그가 쌓여 고치기 비싸진다.

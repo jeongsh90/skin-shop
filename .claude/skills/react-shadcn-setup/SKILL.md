@@ -34,8 +34,8 @@ src/
     web/      layouts/WebLayout.tsx, pages/*
     admin/    layouts/AdminLayout.tsx, pages/*   (lazy)
   components/
-    ui/          # shadcn 설치물 (직접 수정 시 상단 주석에 변경 사유)
-    registry/    # 커뮤니티 레지스트리 설치물 (출처 주석 필수)
+    ui/          # shadcn 설치물 (직접 수정 시 변경 사유는 같은 이름 .md에)
+    registry/    # 커뮤니티 레지스트리 설치물 (출처는 같은 이름 .md에)
     web/ admin/ shared/
   lib/ (api/, smooth-scroll/, utils.ts)
   hooks/  types/  styles/ (tokens.css, typography.css)
