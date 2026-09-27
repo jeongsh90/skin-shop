@@ -1,0 +1,19 @@
+.particle-reveal {
+  position: relative;
+  width: 90%;
+}
+
+.particle-reveal__base {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1);
+}
+
+.particle-reveal__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

@@ -1,0 +1,300 @@
+# 다잇누몰(가칭) — 사용자 웹 화면 명세 (stage=web)
+
+> 작성: skin-planner, 2026-09-27. 라우트·가드 규칙은 `01_planner_ia.md`, 엔티티·엔드포인트는 `_workspace/api-contract.md`가 원본이다.
+> 이 문서의 `엔티티{필드}` 표기는 계약 문서의 이름과 1:1로 같다. `[가정]`은 open-questions 기본안이다.
+>
+> 변경(2026-09-27): "스킨별 개발 지원언어" 요구 — 언어 버전(SkinVariant) 도입, 목록 `lang` 필터, 상세 언어 선택·언어별 데모, "다른 언어 요청".
+> 변경(2026-09-27): 사용자 지정 GNB — About Us / 서비스소개 / 템플릿소개 / 문의하기. 스킨 목록·상세는 `/templates/*`, 카테고리 = 업종.
+> 변경(2026-09-27): 라이트/다크/시스템 테마, 360/768/1024/1440 반응형 기준.
+> 변경(2026-09-27): 사용자 결정 **OQ-0 = 문의·견적 중심** — 커머스 그룹(장바구니·주문서·결제·주문 완료·로그인/회원가입·마이페이지·라이선스 증서) 명세 **삭제**. 후기(구매자 전용)·템플릿 Q&A 게시판·찜도 회원 전제라 삭제. 템플릿 상세 CTA는 "이 템플릿으로 문의하기" 하나. 비회원 문의 + `/contact/lookup`(접수번호+이메일) 조회. 가격은 "기준가".
+> 변경(2026-09-27): 사용자 결정 **OQ-A = 언어 무관 동일가** — 기준가는 (템플릿, 라이선스) 단위. 언어 버전 전환은 가격을 바꾸지 않는다.
+> 변경(2026-09-27): 사용자 결정 **OQ-1 = 개인/상업/확장 3종** — 상세에서 선택 → 기준가 표시 → 문의에 전달.
+> 변경(2026-09-27): 사용자 결정 **OQ-C = About Us 한 페이지** — `/about` 4섹션 + sticky 서브내비 스크롤 스파이.
+> 변경(2026-09-27): 노이즈 오버레이(전 페이지), 잉크 번짐 리빌 후보(`[리빌 후보]`) 표시 추가.
+
+## 용어 규칙
+- **화면 문구**: "템플릿"으로 표기("스킨"은 화면에 쓰지 않음). 명세·코드·계약의 `Skin*`은 엔티티 이름.
+- **카테고리 = 업종**: 엔티티 `Category`, 웹 쿼리 `industry`.
+- **가격 용어**: 템플릿 가격은 **"기준가"**(라이선스별, 부가세 포함), 제작 대행 요금은 **"예상 비용"**("~원부터" / "별도 견적"). "구매·결제·장바구니·주문" 문구는 쓰지 않는다. 기준가 옆 캡션 공통 문구: "실제 비용은 요청 범위에 따라 견적으로 안내됩니다".
+- **CTA 용어**: 주 CTA는 "문의하기" 계열("이 템플릿으로 문의하기", "제작 견적 문의", "이 플랜으로 문의").
+
+## 0. 전 화면 공통 규칙
+
+- **상태**: 모든 데이터 화면은 로딩 / 정상 / 빈 / 에러를 가진다(로그인이 없으므로 권한없음 상태 없음).
+  - 로딩: 실제 레이아웃과 같은 모양의 스켈레톤(스피너 단독 금지). 150ms 미만 응답은 스켈레톤 생략.
+  - 빈: 상황 설명 1줄 + 다음 행동 CTA 1개. 범용 문구("데이터가 없습니다") 금지.
+  - 에러: 문구 + "다시 시도"(refetch). 404는 `NotFoundState`.
+- **제출 동작(mutation)**: 버튼 진행 중 비활성+스피너, 성공 토스트(sonner), 실패 에러 토스트 + 필드 에러는 필드 아래(`ApiError.fieldErrors`).
+- **금액**: 원 단위 정수 → `1,234,000원`. 할인 시 정가 취소선 + 기준가 + 할인율. 부가세 포함 표기.
+- **날짜**: 목록 `2026.09.27`, 상세·로그 `2026.09.27 14:03`.
+- **스크롤**: 전 페이지 Lenis. 내부 스크롤 영역(모바일 메뉴, 드롭다운, 모달 본문, 가로 스크롤 표, 미리보기 iframe 래퍼)은 `data-lenis-prevent`. 모달/Sheet 열림 동안 `lenis.stop()`. 비동기 로드·아코디언 확장 후 `lenis.resize()`. 앵커 이동은 `lenis.scrollTo(target, { offset: -(헤더 + sticky 서브내비) })`.
+- **접근성**: 아이콘 버튼 `aria-label`, 포커스 링 유지, 토글류(디바이스·언어·라이선스·테마)는 `radiogroup`.
+
+### 0-1. 테마(라이트/다크) 규칙
+- 3상태 `light` / `dark` / `system`(기본). localStorage `daitnu:theme` 저장, 서버 저장 없음.
+- `system`은 `prefers-color-scheme`을 따르고 OS 변경을 즉시 반영(matchMedia change).
+- **FOUC 방지**: `index.html` `<head>` 인라인 스크립트가 React보다 먼저 `<html>`에 `class="dark"`와 `color-scheme`을 설정. 전환 순간 전역 transition을 한 프레임 끈다.
+- 전환 UI: 헤더 유틸 드롭다운(768+) · 모바일 메뉴 세그먼트(전 폭) — 같은 상태.
+- 색은 역할명으로만 적는다: 배경/표면/텍스트/보조텍스트/경계/포인트 컬러(주 CTA·활성)/포인트 보조(연한 강조 배경)/위험/성공. 실제 값은 디자인 토큰.
+- **테마 적용 범위 밖**: 데모 iframe 내부(템플릿 원본 색 — 테마 주입 금지), 템플릿 썸네일·갤러리 이미지, 브랜드 로고 원본. 데모 미리보기는 바깥 크롬만 사이트 테마.
+
+### 0-2. 반응형 기준
+| 구간 | 폭 | 공통 규칙 |
+|---|---|---|
+| 모바일 | 360–767 | 360에서 가로 스크롤 금지, 1열 중심, 좌우 여백 16–20px, 헤더 56px, GNB → 전체 화면 메뉴, 하단 고정 CTA 바 허용, 필터 바텀시트, 표는 카드 리스트 또는 첫 열 고정 가로 스크롤, 터치 타깃 44px+ |
+| 태블릿 | 768–1023 | 2열 중심, GNB는 햄버거(우측 Sheet), 필터 바텀시트, sticky 사이드 패널 없음 |
+| 데스크톱 | 1024–1439 | GNB 노출, 2단 레이아웃(좌 필터/우 목록, 좌 갤러리/우 sticky 선택 패널), hover 인터랙션 |
+| 와이드 | ≥1440 | 콘텐츠 최대 폭 1280 가운데, 그리드 열 수만 증가 |
+
+각 화면의 "반응형"은 이 4구간으로 적는다. 명시 없는 구간은 바로 아래 구간과 같다.
+
+### 0-3. 시각 효과(노이즈 · 잉크 번짐 리빌)
+- **노이즈 오버레이**: 사용자 웹 레이아웃 루트에 고정 오버레이 1개(`pointer-events:none`, 스크롤과 무관) — 모든 `web` 라우트에 적용, 관리자 제외. 다크 모드 블렌드·투명도와 모달·토스트·데모 미리보기(`bare`) 위 표시 여부는 디자이너 결정. 참고: `_workspace/00_input/noise-ref/README.md`.
+- **잉크 번짐 리빌**(`InkReveal`): 스크롤 진행도에 따라 흑백 이미지 위로 원색이 유기적 가장자리의 마스크로 번져 내려오는 효과. 참고: `_workspace/00_input/svg-filter-ref/README.md`.
+  - 적용 대상: 각 화면 "섹션"의 **`[리빌 후보]`** 이미지만(대표 비주얼 위주). 최종 채택은 디자이너가 후보 중 선택.
+  - **비권장**: 템플릿 목록 카드·메인 템플릿 그리드·관련 템플릿처럼 같은 효과가 한 화면에 여러 개 동시에 도는 곳(매 프레임 displacement 필터 재계산 → 버벅임). 갤러리 썸네일·아이콘·로고에도 쓰지 않는다.
+  - 규칙: 한 뷰포트 동시 활성 최대 2개 권장, 뷰포트 밖 계산 생략, `prefers-reduced-motion`이면 원색 이미지 그대로, 컨테이너 비율 고정(찌그러짐 방지), 인스턴스마다 고유 id.
+  - 다크 모드에서 흑백 단계가 배경과 뭉개지지 않는지 디자이너 확인.
+
+---
+
+# ① 공통 레이아웃 + 메인
+
+## 공통 헤더
+- 목적: 4개 GNB로 제작 대행 소개와 템플릿 카탈로그를 모두 열고, 유틸에서 검색·테마를 바로 쓴다.
+- 섹션: 로고 / **GNB 4개**(About Us · 서비스소개 · 템플릿소개 · 문의하기) / 유틸(검색 · 테마). 계정·장바구니 없음.
+- GNB 동작:
+  - **About Us**(→ `/about`): 드롭다운 4항목 — 제작방법(`/about#process`) · 제작비용(`/about#pricing`) · 검색등록(`/about#seo`) · 유지보수(`/about#maintenance`), 각 한 줄 설명. 이미 `/about`에 있으면 라우트 전환 없이 Lenis로 해당 섹션 이동 + 해시 replace.
+  - **서비스소개**(→ `/services`).
+  - **템플릿소개**(→ `/templates`): 메가메뉴 — 업종 열(Category: 이름+템플릿 수 → `/templates?industry={slug}`), 개발 언어 열(Language → `/templates?lang={code}`), 대표 템플릿 카드(HomeBanner 첫 항목) + "전체 템플릿 보기".
+  - **문의하기**(→ `/contact`): 강조형 버튼(포인트 컬러).
+  - 활성: `/about` · `/services` · `/templates/*` · `/contact*`.
+- 유틸:
+  - 검색(⌘K/Ctrl+K → 오버레이): 300ms 디바운스 추천(`GET /api/skins?q=&pageSize=5`), Enter → `/templates?q=`. 최근 검색어 5개(localStorage). 0건 → "‘{q}’에 맞는 템플릿이 없습니다" + 업종 칩 + "원하는 디자인으로 제작 문의"(→ `/contact?type=production_quote`).
+  - 테마: 아이콘 버튼(해/달/모니터) → DropdownMenu radiogroup "라이트 / 다크 / 시스템 설정". `aria-label="화면 테마: {현재}"`.
+- 스크롤: 다운 시 헤더 축소+배경 불투명, 업 시 재노출. 메인 히어로 위에서만 투명 시작.
+- 상태: Category/Language 실패 → 메가메뉴 안 작은 ErrorState(GNB 자체는 정적).
+- 데이터: Category[](`GET /api/categories`), Language[](`GET /api/languages`), HomeBanner[0].
+- 반응형:
+  - 360–767: 56px. 로고 / 검색 · 햄버거. 테마는 모바일 메뉴 안. 검색 오버레이 전체 화면.
+  - 768–1023: 64px. 로고 / 검색 · 테마 · 햄버거(GNB는 Sheet 안).
+  - 1024–1439: 72px. GNB 노출, 드롭다운·메가메뉴 hover(터치는 click), 메가메뉴 2열(대표 카드 숨김).
+  - ≥1440: 메가메뉴 3열, 최대 폭 1280.
+
+## 모바일 메뉴 (Sheet)
+- 섹션: 1) GNB 아코디언 — About Us(4섹션 링크), 서비스소개, 템플릿소개(업종·개발 언어 목록), 문의하기 2) 테마 세그먼트(라이트/다크/시스템) 3) 보조 링크: 문의 조회·FAQ·공지·약관 4) 하단 고정 "제작 문의하기"(→ `/contact`).
+- 기능: 링크 이동 시 자동 닫힘(같은 페이지 해시 링크도 닫은 뒤 Lenis 이동), ESC/오버레이 닫힘, 열린 동안 `lenis.stop()`.
+- 반응형: 360–767 전체 화면(상단 로고+닫기). 768–1023 우측 Sheet 400px + 배경 딤. ≥1024 사용 안 함(창을 넓히면 자동 닫힘). 현재 경로가 속한 1depth 아코디언 기본 펼침.
+
+## 공통 푸터
+- 섹션: 1) 브랜드 소개 + 신뢰 요약(SiteStats{totalSkins, completedProjects}) + "제작 문의하기" 2) 링크 그룹 — About Us(4섹션 앵커) / 서비스·템플릿(서비스소개·전체 템플릿·신규 템플릿) / 고객지원(문의하기·**문의 조회**·FAQ·공지사항) / 정책(이용약관·**개인정보처리방침**(굵게)·라이선스 정책) 3) 사업자 정보(SiteInfo) 4) 저작권.
+- 상태: SiteInfo 실패 시 사업자 블록만 숨김.
+- 데이터: SiteInfo(`GET /api/site/info`), SiteStats(`GET /api/site/stats`).
+- 반응형: 360–767 링크 그룹 아코디언 + 사업자 정보 접힘. 768–1023 2×2. ≥1024 4열 + 좌 브랜드 블록.
+
+## 공통 컴포넌트(①에서 먼저 만든다)
+- `NotFoundState`(홈 / 전체 템플릿 CTA), `ErrorState`, `EmptyState`, `PriceTag`(정가/기준가/할인율 + 선택 캡션), `PageHero`(브레드크럼·타이틀·리드, 선택 배경 비주얼), `CtaBand`(하단 문의 띠), `InkReveal`(§0-3), `NoiseOverlay`.
+- `SkinCard`(템플릿 카드): 썸네일(16:10, hover 시 `hoverImageUrl` 크로스페이드 — **리빌 미적용**), 업종명, 제목, 지원언어 칩(Skin.languages, 최대 3 + "+n", `lang` 필터에 걸린 언어 강조), "기준가 {Skin.minBasePrice}원부터", 배지(`NEW` 출시 30일 / `UPDATE` 14일 내 새 버전 / `BEST` Skin.isBest). 카드 클릭 → `/templates/:slug`, 우상단 "데모" 아이콘 → `/templates/:slug/preview`(stopPropagation). `lang` 필터가 있으면 두 링크에 겹치는 첫 언어를 `?lang=`로 붙인다.
+
+## 메인 (`/`)
+- 목적: 4개 메뉴로의 진입을 한 화면에 담아 "템플릿으로 시작" / "처음부터 맞춤 제작" 중 자기 경로를 고르고 문의로 이어지게 한다.
+- 섹션(위→아래):
+  1) **히어로 쇼케이스**: HomeBanner(`placement=hero`) 1~5개. 카피(제목·부제) + CTA "템플릿 보기"(skinSlug 있으면 상세, 없으면 `/templates`) / "제작 문의"(→ `/contact`). 우 디바이스 목업(PC+모바일). 2개 이상이면 6초 자동 전환(호버 정지). — 히어로는 첫 화면이라 리빌 대상 아님(진입 즉시 원색).
+  2) **신뢰 지표 띠**: SiteStats{totalSkins, completedProjects, languageCount, updatesThisMonth} — 뷰포트 진입 시 1회 카운트업.
+  3) **About Us 진입 "이렇게 만듭니다"**: 제작방법 6단계 요약(ProcessStep, 정적) + "예상 비용 {PricingPlan(kind=production) 최저 price}원부터" 카드(→ `/about#pricing`) + 보조 링크 "검색등록"(`/about#seo`)·"유지보수"(`/about#maintenance`) + "제작방법 자세히"(→ `/about#process`). 좌측 대표 제작 사례 이미지 1장 **[리빌 후보]**.
+  4) **서비스소개 진입 "운영까지 편하게"**: ServiceFeature `isHighlighted` 6개 아이콘 그리드 → `/services#{slug}`, "전체 기능 보기". 우측 관리자 화면 스크린샷 1장 **[리빌 후보]**.
+  5) **템플릿소개 진입 — 업종별**: Category 카드 그리드(이름·템플릿 수·대표 이미지) → `/templates?industry=`. (카드 다수 → 리빌 비권장)
+  6) **인기/신규 템플릿**: 탭 "인기 / 신규"(`sort=popular|newest`) 8개 SkinCard + "전체 보기". (리빌 비권장)
+  7) **개발 언어별 진입**: Language 칩(아이콘·이름·템플릿 수, 0개 숨김) → `/templates?lang=`. 캡션 "원하는 언어가 없나요? 언어 버전 제작도 문의할 수 있어요"(→ `/contact?type=custom_dev`).
+  8) **최근 업데이트된 템플릿**: RecentUpdate 5건 — 템플릿명·언어·버전·출시일·첫 변경 → `/templates/:slug?lang={code}#changelog`.
+  9) **고객 후기**: Testimonial `isFeatured` 최대 6개 캐러셀(제작 대행 고객 — 회사/업종·담당자 마스킹명·본문·관련 템플릿 링크(있을 때)).
+  10) **마무리 CTA 띠**(`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기" + 운영시간(SiteInfo.csHours).
+- 기능: 섹션별 독립 쿼리. 진입 모션은 섹션마다 다르게(동일 fade-up 반복 금지), 리빌 채택 섹션은 리빌 외 추가 모션 최소화.
+- 상태: 섹션별 스켈레톤 / 0건이면 섹션 숨김(히어로 0건은 정적 기본 카피+CTA) / 섹션별 작은 ErrorState. PricingPlan 실패 시 "예상 비용 보기" 링크만.
+- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), SiteStats, PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), Category[], Skin[](`GET /api/skins?sort=popular|newest&pageSize=8`), Language[], RecentUpdate[](`GET /api/skins/updates/recent?limit=5`), Testimonial[](`GET /api/testimonials?featured=1&limit=6`), SiteInfo.
+- 반응형:
+  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 지표 2×2. 스텝 세로 타임라인 + 비용 카드. 기능 2열. 업종 2열. 템플릿 1열(탭 세그먼트). 언어 칩 가로 스크롤. 후기 1장 스와이프.
+  - 768–1023: 히어로 2단(55/45). 지표 4개 한 줄. 스텝 3×2. 기능 3열. 업종 3열. 템플릿 2열. 후기 2장.
+  - 1024–1439: 스텝 6개 가로 + 우 비용 카드. 업종 4열. 템플릿 3열. 후기 3장.
+  - ≥1440: 템플릿 4열, 히어로 목업 확대.
+- 가정: ProcessStep은 프론트 정적 상수. 배너·하이라이트 기능·요금제·후기는 관리자 필드.
+
+---
+
+# ② About Us (`/about` — 한 페이지 4섹션)
+
+> 변경(2026-09-27): 사용자 결정 OQ-C — 2depth별 라우트에서 **한 페이지 스크롤**로 전환. `/about/*`는 `/about#섹션` 리다이렉트.
+
+- 목적: 제작 대행의 진행 방식·비용·검색등록·유지보수를 한 흐름으로 읽게 해 견적 문의로 연결한다.
+- 섹션(위→아래):
+  0) `PageHero`: "기획부터 오픈, 운영까지" + 리드 + 대표 비주얼 **[리빌 후보]**.
+  0-1) **sticky 서브내비**(헤더 바로 아래 고정): 제작방법 · 제작비용 · 검색등록 · 유지보수 + 우측 "견적 문의" 버튼.
+  1) **제작방법**(`#process`): 리드 "상담부터 오픈까지 평균 3~6주"(가정) / 6단계 프로세스(ProcessStep: 상담·요구 정리 → 기획·사이트맵 → 디자인(템플릿 기반 또는 맞춤) → 개발(HTML/React/PHP/Java 등 선택 언어) → 검수·수정 → 오픈·인수인계 — 단계별 기간·고객 준비물·산출물), 스크롤에 따라 현재 단계가 채워지는 타임라인 / **제작 방식 비교**: "템플릿 기반 제작"(템플릿소개에서 고르고 커스터마이징) vs "맞춤 제작"(기간·비용대·수정 범위) + CTA "템플릿 고르기"(→ `/templates`) · "맞춤 제작 문의"(→ `/contact?type=production_quote`) / 고객 준비물 체크리스트(로고·원고·이미지·도메인·호스팅). 단계 일러스트 또는 작업 사진 1장 **[리빌 후보]**.
+  2) **제작비용**(`#pricing`): 요금제 카드(PricingPlan `kind=production` — 이름·"{price}원부터"(`from`) 또는 "별도 견적"(`quote`)·기간·포함 항목·추천 배지·CTA "이 플랜으로 문의"(→ `/contact?type=production_quote&plan={code}`)) / 비용 구성 요인(페이지 수, 개발 언어, 기능(→ `/services`), 다국어, 콘텐츠 입력 대행) / 추가 옵션표(`#pricing-options`, PricingPlan `kind=option` — 이름·단가·단위) / 템플릿 기준가 안내 "템플릿 라이선스만 필요하면 기준가 {최저 기준가}원부터"(→ `/templates`) / 계약·결제 방식 안내(계약금/잔금 — 가정 문구). 모든 금액은 "예상 비용".
+  3) **검색등록**(`#seo`): 제공 항목 카드(네이버 서치어드바이저·구글 서치콘솔·다음 등록 / sitemap.xml·robots.txt / 메타태그·OG / 구조화 데이터 / 속도 점검 / 노출 확인 리포트) / 절차 4단계(진단 → 설정 → 등록 신청 → 노출 확인) / 요금(PricingPlan `kind=seo`) / 유의사항("검색 순위는 보장하지 않습니다", 반영 1~4주 가정) / CTA "검색등록 문의"(→ `/contact?type=seo`).
+  4) **유지보수**(`#maintenance`): 월 플랜 카드(PricingPlan `kind=maintenance` — 월 비용·월 작업 시간·응답 시간·포함 항목(콘텐츠 수정, 템플릿 업데이트 적용, 백업, 보안 패치, 월간 리포트)) / 작업 요청 흐름(문의 → 접수 → 작업 → 완료 보고) / 유의사항(계약 기간·해지·초과 작업 단가 — 가정) / CTA "유지보수 상담"(→ `/contact?type=maintenance`).
+  5) **FAQ**: Faq `category=production,seo,maintenance` 합쳐 최대 8개 아코디언 + "FAQ 전체"(→ `/support/faq`).
+  6) `CtaBand` "정확한 견적 받아보기"(→ `/contact?type=production_quote`).
+- 기능/인터랙션:
+  - **서브내비·GNB 드롭다운 클릭** → `lenis.scrollTo('#{id}', { offset: -(헤더 + 서브내비) })` 부드러운 이동 + `history.replaceState`로 해시 갱신(히스토리 누적 없음).
+  - **앵커 직접 진입**(`/about#pricing` 등, 다른 페이지에서 링크, 새로고침): PricingPlan·Faq 로드 완료 후 `lenis.resize()` → 즉시(`immediate`) 해당 섹션 위치. 데이터가 늦어도 섹션 제목 위치가 먼저 잡히도록 섹션별 최소 높이 스켈레톤을 둔다(로드 후 위치가 밀리지 않게).
+  - **스크롤 스파이**: 섹션 경계가 서브내비 하단선을 지날 때 현재 섹션 표시(IntersectionObserver 또는 Lenis scroll 콜백), 스크롤 중엔 해시를 갱신하지 않는다(뒤로가기 오염 방지).
+  - 헤더가 스크롤 다운 시 축소되면 서브내비 top도 함께 조정.
+- 상태: 1)·3)·4) 본문은 정적 카피 — 항상 표시. 요금 카드 영역만 로딩(카드 스켈레톤)/빈(플랜 0개 → "프로젝트마다 견적이 달라요" + 문의 CTA)/에러(작은 ErrorState). FAQ 0건·에러 → 섹션 숨김.
+- 데이터: ProcessStep(정적), PricingPlan[](`GET /api/pricing-plans?kind=production,option,seo,maintenance` 한 번에), Faq[](`GET /api/faqs?category=production,seo,maintenance&limit=8`), 템플릿 최저 기준가(`GET /api/skins?sort=price_asc&pageSize=1`).
+- 반응형:
+  - 360–767: 서브내비 = 가로 스크롤 칩(현재 섹션 칩이 보이도록 자동 스크롤, "견적 문의" 버튼 숨김 → 하단 고정 CTA 바 "견적 문의"). 타임라인 세로, 비교표 → 카드 2장, 요금제 카드 1열(추천 먼저), 옵션표 → 리스트, 검색등록 제공 항목 1열, 유지보수 플랜 1열(포함 항목 아코디언).
+  - 768–1023: 서브내비 4칸 균등(스크롤 없음) + 버튼. 요금제 2열, 제공 항목 2열, 플랜 1열.
+  - 1024–1439: 제작방법은 좌 스텝 목록(4/12 sticky, 서브내비 아래) + 우 상세(8/12). 요금제 3~4열, 제공 항목 3열, 플랜 3열 + 포함 항목 비교표.
+  - ≥1440: 요금제 4열, 최대 폭 1280.
+- 가정: 단계·기간·금액·플랜 구성은 시드 샘플(OQ-N3). "검색등록" = 검색엔진 등록 + 기본 SEO 설정(순위 보장 없음).
+
+---
+
+# ③ 서비스소개 (`/services`)
+
+- 목적: 제작 결과물(템플릿 포함)이 기본 제공하는 **웹사이트 운영 편의 기능**을 소개한다.
+- 섹션(위→아래):
+  1) `PageHero`: "운영에 필요한 기능, 처음부터 갖춰 드립니다" + 기능 수. 대표 비주얼(관리자 대시보드 목업) **[리빌 후보]**.
+  2) **기능 그룹 앵커 내비**(sticky, 스크롤 스파이): FeatureGroup — 콘텐츠 관리 / 회원·고객 / 예약·신청 / 마케팅 / 운영 도구 `[가정]`. 클릭 → Lenis 앵커 스크롤 + 해시 replace.
+  3) **그룹별 섹션**(반복, `id={group.slug}`): 그룹명·설명 + ServiceFeature 카드(아이콘·이름·요약·"기본 제공/옵션" 뱃지(`availability`, 옵션 → `/about#pricing-options`)·지원 언어 칩(`languages`)) — 카드 `id={feature.slug}`. 그룹마다 대표 스크린샷 1장(`FeatureGroup.imageUrl`) **[리빌 후보 — 그룹 5개가 연속되므로 채택 시 한 뷰포트에 1개만 들어오도록 간격 확보]**.
+  4) **언어별 포함 기능 매트릭스**: 행=ServiceFeature, 열=Language(템플릿이 있는 언어), 셀=포함 여부 — 가로 스크롤 표(`data-lenis-prevent`).
+  5) `CtaBand`: "필요한 기능이 따로 있나요?" + "이 기능으로 제작 문의"(→ `/contact?type=production_quote`) · "템플릿 둘러보기".
+- 기능: 해시 진입 시 데이터 로드 후 `lenis.resize()` → 스크롤. 카드 클릭 → 상세 Dialog(`description`, 스크린샷) + Dialog 하단 "이 기능 포함해서 문의"(→ `/contact?type=production_quote&feature={slug}`).
+- 상태: 로딩(그룹 스켈레톤) / 빈 "기능 소개를 준비 중입니다" + 문의 CTA / 에러 ErrorState. Language 실패 시 매트릭스 숨김.
+- 데이터: `GET /api/service-features` → `{ groups: FeatureGroup[]; items: ServiceFeature[] }`, Language[].
+- 반응형: 360–767 앵커 내비 가로 스크롤 칩(sticky), 카드 1열, 매트릭스 첫 열 고정 가로 스크롤. 768–1023 카드 2열. 1024–1439 좌 앵커 내비 세로(3/12 sticky) + 우 섹션(9/12) 카드 3열. ≥1440 동일, 최대 폭 1280.
+- 가정: 기능 목록·언어별 포함 여부는 시드 샘플(OQ-D).
+
+---
+
+# ④ 템플릿소개 (목록 + 상세 + 데모 미리보기)
+
+## 템플릿 목록 (`/templates`)
+- 목적: 업종·개발 언어로 템플릿을 좁히고 비교한다.
+- 섹션: 1) `PageHero`(업종 선택 시 업종명·설명 / 검색 시 "‘{q}’ 검색 결과" / 기본 "템플릿소개 — 업종별 디자인 템플릿" + 총 건수) 2) **업종 탭**(`industry`, 가로 스크롤 칩, "전체" 포함) 3) 좌측 필터 패널 4) 툴바(적용 필터 칩·개별/전체 해제, 정렬 Select, 결과 수) 5) SkinCard 그리드(리빌 비권장) 6) 페이지네이션 7) `CtaBand` "맞는 템플릿이 없나요? 업종에 맞춰 제작해 드립니다"(→ `/contact?type=production_quote`).
+- 필터(URL 쿼리 동기화):
+  - **개발 언어**(`lang`, 다중 — 그룹 표시: 프론트엔드 HTML·React·Next.js·Vue·Nuxt / 서버·CMS PHP·Laravel·Java(Spring)·Java(JSP)·ASP.NET·WordPress·그누보드, 건수 facet, OR)
+  - 호환 플랫폼(`platform`, 다중, facet)
+  - 기준가(`price`, 단일: 5만원 미만 / 5–10만원 / 10만원 초과 — 최저 기준가 기준)
+  - 반응형만(`responsive=1`)
+- 정렬: 인기순 / 최신순 / 기준가 낮은순 / 기준가 높은순.
+- 기능: 필터 변경 즉시 반영(데스크톱), URL `push`(뒤로가기로 이전 필터 복원), `page` 리셋. 이전 결과 유지 로딩(`keepPreviousData`) + 그리드 위 진행 바. 번호 페이지네이션(24개), 이동 시 목록 상단으로 Lenis 스크롤. facet 0인 옵션 비활성(선택 중이면 유지).
+- 상태: 최초 스켈레톤 12장 / 빈(필터·검색 있음) "조건에 맞는 템플릿이 없습니다" + "필터 초기화" + 인기 4개. `lang` 필터가 원인이면 추가 "{언어} 버전이 필요하신가요? 템플릿 상세에서 ‘다른 언어 요청’을 하거나 개발을 문의해 주세요" + "언어 버전 개발 문의"(→ `/contact?type=custom_dev&lang={code}`) / 빈(필터 없음) "아직 등록된 템플릿이 없습니다" / 에러 ErrorState.
+- 데이터: `GET /api/skins`(Paginated<Skin> + facets; URL `industry` → API `category`), Category[], Language[], Platform[](`GET /api/platforms`).
+- 반응형:
+  - 360–767: 그리드 1열. 툴바 = "필터(n)" + 정렬 한 줄, 적용 칩 가로 스크롤. 필터 **바텀시트**(85vh, `data-lenis-prevent`) — 선택을 모았다가 "n개 결과 보기"로 일괄 적용(`pageSize=0` 카운트), "초기화". 페이지네이션 축약형(이전/다음 + "3 / 12").
+  - 768–1023: 그리드 2열, 바텀시트 70vh, 숫자형 페이지네이션(5개).
+  - 1024–1439: 좌 필터 패널(3/12 sticky) + 그리드 3열, 즉시 적용.
+  - ≥1440: 그리드 4열(필터 패널 280px 고정).
+- 가정: 업종 10종·언어 12종·플랫폼 5종 시드(api-contract §1).
+
+## 템플릿 상세 (`/templates/:slug`)
+- 목적: 데모로 품질을 확인하고, 언어 버전·라이선스를 골라 기준가를 보고 **문의로** 이어지게 한다.
+- 섹션(위→아래):
+  1) 브레드크럼(홈 > 템플릿소개 > 업종 > 템플릿명)
+  2) **상단 2단**: 좌 갤러리 / 우 **선택 패널**(데스크톱 sticky)
+     - 갤러리: SkinImage[] 메인 이미지 + 썸네일 스트립, 라이트박스(키보드·스와이프), `device` 라벨. 첫 메인 이미지는 첫 화면이라 리빌 대상 아님.
+     - 선택 패널: 업종·제목·`tagline` / **개발 언어 선택**(radiogroup 칩: SkinVariant — Language 아이콘+이름+`frameworkLabel`; `coming_soon`은 비활성+"출시 알림" 링크) + "다른 언어 요청" 텍스트 버튼 / **라이선스 선택**(radiogroup 카드 3종: 라이선스명·기준가·허용 범위 2~3줄·"자세히"(비교 모달)) / `PriceTag` "기준가 {선택 라이선스 basePrice}원" + 캡션 "언어 버전과 관계없이 동일 · 실제 비용은 요청 범위에 따라 견적으로 안내됩니다" / 선택 언어 버전의 최신 버전·최근 업데이트일 / 버튼: **"이 템플릿으로 문의하기"**(주 CTA, 포인트 컬러 — → `/contact?type=template_custom&template={slug}&lang={선택}&license={선택}`), "라이브 데모"(보조, → preview) / 보조 링크 "라이선스 정책"(`/policy/license`).
+  3) **라이브 데모**(`#demo`, iframe 내부는 사이트 테마 무관): 디바이스 토글(PC/태블릿/모바일) + 축소 iframe(1440/820/390을 컨테이너에 scale), 데모 탭(SkinDemo 여러 개), "전체 화면으로 보기"(→ `/templates/:slug/preview?lang=&device=`). 언어 전환 시 전용 데모(`variantId`=선택) 우선, 없으면 공통(`variantId=null`) — 전용이면 "{언어} 버전 데모" 라벨. 뷰포트 진입 시에만 iframe 로드.
+  4) sticky 섹션 탭: 소개 / 사양 / 업데이트 로그 — 스크롤 스파이, 클릭 시 Lenis 앵커 이동.
+  5) **소개**(`#overview`): `description`(sanitize HTML) + 주요 특징(`features[]`) + 대표 연출 이미지(`SkinImage` 중 `isHighlight`=true 1장) **[리빌 후보 — 상세에서 유일한 후보]**.
+  6) **사양**(`#specs`): 선택 언어 버전 기준 — 언어·프레임워크, 요구 환경(`requirements`), 호환 플랫폼, 부가 기술(`techTags`), 포함 파일(`includedFiles`), 버전 최초 출시일·최근 업데이트일 / 공통 — 반응형 여부, 지원 브라우저. "언어 버전 비교" 토글 — 모든 SkinVariant 열 비교표(언어·요구 환경·포함 파일 수·최신 버전·상태). 가격 열 없음(언어 무관 동일가).
+  7) **업데이트 로그**(`#changelog`): 선택 언어 버전의 SkinVersion 최신순(Select로 다른 언어 로그 전환) — 버전·출시일·변경 항목(type 뱃지 추가/개선/수정/보안). 기본 3개 + "전체 보기"(펼침 후 `lenis.resize()`).
+  8) **관련 템플릿**: 같은 업종 4개(리빌 비권장).
+  9) `CtaBand`: "이 디자인으로 우리 회사 사이트를 만들고 싶다면" + "이 템플릿으로 문의하기"(동일 링크).
+- **라이선스 비교 모달**: LicenseType 3종 열 비교(사용 가능 사이트 수, 상업적 이용, 클라이언트 납품, 재판매·재배포 금지, 업데이트 제공 기간, 지원 기간, 기준가(이 템플릿)) + `/policy/license`.
+- **언어 요청 모달**("다른 언어 요청" / "출시 알림"에서 진입, 비회원):
+  1) 이 템플릿에 없거나 준비 중인 Language 라디오 — 각 옆 요청 수(`LanguageRequestStat.count`, "12명이 요청") + "목록에 없는 언어"(직접 입력) 2) 이메일(필수 — 출시 알림 수신) 3) 메모(선택 200자) 4) [필수] 개인정보(이메일) 수집·이용 동의(출시 알림 목적, 보관 기간 명시) 5) 제출 → `POST /api/skins/:slug/language-requests` → 토스트 "요청을 접수했습니다. 출시되면 {email}로 알려드릴게요", 요청 수 +1. 같은 이메일·언어 중복이면 "이미 요청하신 언어입니다"(409, 정상 처리로 안내). 6) 하단 "급하게 필요하신가요? 유료 개발 견적 문의"(→ `/contact?type=custom_dev&template={slug}&lang={code}`). "출시 알림"으로 열면 해당 언어 미리 선택. 요청 취소는 웹에 없음(알림 메일의 수신 거부 링크 — 3단계).
+- 기능/인터랙션:
+  - 언어 선택 → 사양·포함 파일·업데이트 로그·데모 전환 + `?lang=` replace. **기준가는 바뀌지 않는다.**
+  - 라이선스 선택 → 기준가 변경 + `?license=` replace.
+  - 판매 중지(`status=discontinued`): 상세는 보이되 문의 CTA 문구를 "비슷한 디자인으로 제작 문의"(→ `/contact?type=production_quote&template={slug}`)로 바꾸고 라이선스 선택 비활성 + 안내 "더 이상 라이선스를 제공하지 않는 템플릿입니다".
+- 상태: 로딩(갤러리·선택 패널 스켈레톤) / 404 `NotFoundState`("템플릿을 찾을 수 없습니다") / 에러 ErrorState / 업데이트 로그 1건(최초 출시) 정상 / 데모 로드 실패·10초 타임아웃 → "미리보기를 불러오지 못했습니다" + "새 창에서 데모 열기"(`target=_blank rel=noopener`) / `allowIframe=false`면 처음부터 새 창 버튼.
+- 데이터: SkinDetail(`GET /api/skins/:slug` — images, demos, variants(licenseOptions 없음), licenseOptions(스킨 단위), features, supportedBrowsers, languageRequestStats), LicenseType[](`GET /api/license-types`), Language[], SkinVersion[](`GET /api/skins/:slug/versions?variantId=`), 관련 Skin[](`GET /api/skins/:slug/related`), LanguageRequest 쓰기.
+- 반응형:
+  - 360–767: 1단 = 브레드크럼 → 갤러리(스와이프) → 선택 패널(언어 칩 가로 스크롤, 라이선스 카드 세로) → 데모 → 섹션 탭(sticky 가로 스크롤) → 본문. **하단 고정 바**(선택 라이선스·기준가 + "문의하기"). 데모 토글 유지(PC는 scale 축소). 비교표 첫 열 고정 가로 스크롤. 언어 요청 모달 전체 화면.
+  - 768–1023: 1단, 갤러리 전폭 + 썸네일 스트립, 하단 고정 바 유지, 관련 2열.
+  - 1024–1439: 2단(갤러리 7/12 · 선택 패널 5/12 sticky), 하단 바 없음, 관련 4열.
+  - ≥1440: 동일, 데모 프레임 최대 1280.
+- 가정: 언어 버전이 1개면 칩 대신 읽기 전용 표시 + "다른 언어 요청". 데모는 외부 URL iframe(차단 시 새 창 폴백).
+
+## 데모 미리보기 (`/templates/:slug/preview`)
+- 목적: 템플릿을 전체 화면·디바이스별로 체험.
+- 테마: **iframe 내부는 템플릿 원본 색**(사이트 테마 주입 금지). 상단 바·프레임·배경만 사이트 테마. 다크 모드일 때 캡션 "미리보기는 템플릿 원본 색상으로 표시됩니다". 노이즈 오버레이를 iframe 위에 덮을지는 디자이너 결정(원본 색 보존 원칙 우선 검토).
+- 섹션: 1) 상단 바(56px): 좌 "← 상세로"·템플릿명·데모 Select / 중 디바이스 토글(단축키 1·2·3) / 언어 Select(전용 데모 없으면 "공통 데모" 캡션) / 우 "기준가 {선택 라이선스}원" + "문의하기"(→ `/contact?type=template_custom&template=&lang=&license=`) + "새 창으로 열기" 2) iframe 뷰포트 — PC 폭 100%, 태블릿 820×1180·모바일 390×844 프레임(가운데), 부족하면 scale.
+- 기능: `?device=` replace, 프레임 폭 트랜지션. 이 페이지는 Lenis 비활성(래퍼 `data-lenis-prevent`).
+- 상태: 로딩(프레임 스켈레톤) / 404 / 데모 0개 → "이미지 미리보기만 제공합니다" + 상세로 / 실패·타임아웃 → 새 창 폴백.
+- 데이터: SkinDetail(캐시 `['skin', slug]` 공유).
+- 반응형: 360–767 토글 숨김, iframe 100%, 상단 바 축소(← / 템플릿명 / 문의 아이콘 / 새 창 아이콘). 768–1023 토글 표시, 언어 Select 두 번째 줄. ≥1024 상단 바 한 줄.
+
+---
+
+# ⑤ 문의하기 (+ 문의 조회 · FAQ · 공지)
+
+## 문의하기 (`/contact`)
+- 목적: 제작 견적·템플릿 기반 제작/라이선스·언어 버전 개발·검색등록·유지보수·기술 문의를 **비회원 단일 폼**으로 받는다.
+- 섹션:
+  1) `PageHero`: "무엇을 도와드릴까요?" + 운영시간·평균 응답("평균 {SiteInfo.avgResponseHours}시간 내 답변").
+  2) **문의 유형**(radiogroup 카드, `type` 쿼리 replace 동기화):
+     - 제작·견적: `production_quote` 제작 견적 / `template_custom` 템플릿 문의(이 템플릿으로 제작·라이선스) / `custom_dev` 언어 버전 개발 / `seo` 검색등록 / `maintenance` 유지보수
+     - 기타 지원: `license` 라이선스 문의 / `technical` 기술 지원(납품 후) / `other` 기타
+  3) **유형별 폼**(공통 입력값은 유형을 바꿔도 유지):
+     - 공통: 이름(필수), 이메일(필수 — 답변·조회용), 연락처(제작·견적 계열 필수 / 그 외 선택), 회사·기관명(선택), 제목(2~100자), 내용(10~3000자, 글자 수), 첨부(최대 3개·각 10MB, 이미지·PDF·zip — mock은 파일명·크기만), [필수] 개인정보 수집·이용 동의("보기" = PolicyDocument privacy 요약), 허니팟 필드(숨김).
+     - 제작·견적 계열: 업종(Category + "기타"), 희망 개발 언어(Language + "상관없음" + "기타 직접 입력"), 참고 템플릿(Skin 검색 Combobox, `?template=`), 요금제(PricingPlan, `?plan=`), 필요 기능(ServiceFeature 다중, `?feature=`), 예산 범위(BudgetRange), 희망 오픈일(선택), 기존 사이트 URL(선택).
+     - `template_custom` 추가: **선택한 템플릿 요약 카드**(썸네일·템플릿명·언어 버전·라이선스·기준가, "변경" → 언어/라이선스 Select, `?template=&lang=&license=` 프리필) + **요청 범위** radiogroup(필수): "템플릿만 필요(라이선스)" / "템플릿 + 설치·커스터마이징" / "이 디자인 기반 맞춤 제작". 템플릿 미지정 진입이면 참고 템플릿 필수.
+     - `custom_dev`: 안내 박스 "템플릿 상세의 ‘다른 언어 요청’으로 무료 출시 알림도 신청할 수 있어요" + 참고 템플릿·희망 언어 필수.
+     - `license`·`technical`: 관련 템플릿(선택), 계약·납품 시 받은 접수번호/계약번호(선택 텍스트).
+  4) 제출 버튼 "문의 보내기" + "답변은 {email}로 보내드립니다".
+  5) 보조 패널: 유형 매핑 FAQ 5개 아코디언 + "FAQ 전체" + 연락처(전화·이메일·운영시간) + "이미 문의하셨나요? 문의 조회"(→ `/contact/lookup`).
+- 기능/인터랙션:
+  - 쿼리 프리필: `type`, `template`, `lang`, `license`, `plan`, `feature`. 무효 값 무시(예: 그 템플릿에 없는 lang → 기본 버전).
+  - 검증(zod): 필수값·이메일·연락처(`010-0000-0000`, 자동 하이픈)·파일 크기/개수·요청 범위. 제출 시 첫 오류 필드로 Lenis 스크롤+포커스.
+  - 제출 → `POST /api/inquiries` → 폼 자리에 **성공 화면**: 접수번호 `inquiryNumber`(복사 버튼), 요약(유형·제목·이메일·템플릿), "평균 {n}시간 내 답변" + CTA "문의 조회"(→ `/contact/lookup?no={inquiryNumber}`) · "템플릿 둘러보기" · "홈으로". URL 유지(새로고침 시 빈 폼). mock은 접수 메일을 보내지 않고 성공 화면에 "접수번호를 보관해 주세요" 강조.
+  - 작성 중 이탈 확인(beforeunload + 라우터 blocker, 내용 입력이 있을 때만). 입력 임시 저장은 하지 않음.
+- 상태: 폼 즉시 렌더(Select 옵션만 로딩 표시) / 제출 중 / 성공 / 실패(입력 유지 + 에러 토스트) / 필드 에러.
+- 데이터: Inquiry 쓰기, Category[], Language[], PricingPlan[](`GET /api/pricing-plans`), ServiceFeature[], Skin 검색(`GET /api/skins?q=&pageSize=8`), SkinDetail(`template` 프리필 시 요약 카드), LicenseType[], Faq[](`GET /api/faqs?category={매핑}&limit=5`), PolicyDocument(privacy), SiteInfo.
+- 반응형:
+  - 360–767: 유형 카드 2열(그룹 제목 구분), 폼 1열, 보조 패널은 폼 아래, 하단 고정 "문의 보내기".
+  - 768–1023: 유형 카드 3열, 짧은 필드 2열 배치, 보조 패널 폼 아래.
+  - 1024–1439: 좌 폼(8/12) + 우 보조 패널(4/12 sticky), 유형 카드 4열.
+  - ≥1440: 동일.
+
+## 문의 조회 (`/contact/lookup`)
+- 목적: 회원 기능 없이 접수번호+이메일로 문의 상태와 답변을 확인한다.
+- 섹션: 1) `PageHero` "문의 조회" 2) 폼: 접수번호(`?no=` 프리필, 형식 `IQYYYYMMDD-0000`), 이메일, "조회" 3) 결과 카드: 접수번호·유형·제목·접수일·상태 뱃지(접수됨/검토 중/답변 완료)·내 문의 본문(접힘)·첨부 파일명·**답변**(있을 때: 본문·답변일) 4) 하단 "추가 문의가 있나요?"(→ `/contact?type={같은 유형}`).
+- 기능: `POST /api/inquiries/lookup {inquiryNumber, email}`(이메일을 URL에 남기지 않으려고 POST). 번호·이메일 불일치와 없음은 같은 문구 "일치하는 문의를 찾을 수 없습니다"(존재 노출 방지). 5회 연속 실패 시 서버가 429 → "잠시 후 다시 시도해 주세요". 결과는 화면 상태로만 보관(새로고침 시 폼으로).
+- 상태: 초기(폼) / 조회 중 / 결과 / 불일치 / 429 / 에러.
+- 데이터: InquiryLookupResult.
+- 반응형: 360–767 폼·결과 전폭, 768–1023 max-w 560 가운데, ≥1024 max-w 640 가운데.
+
+## FAQ (`/support/faq`)
+- 섹션: `PageHero`("자주 묻는 질문") + 검색(`q`) / 카테고리 탭(전체 + FaqCategory) / 아코디언 / 하단 "원하는 답이 없나요?" + "문의하기"(카테고리 → type 매핑: production→production_quote, template→template_custom, language→custom_dev, seo→seo, maintenance→maintenance, license→license, technical→technical).
+- 기능: 검색·카테고리 URL 동기화(검색 300ms 디바운스, replace), 검색어 하이라이트, 펼침 후 `lenis.resize()`.
+- 상태: 빈(검색) "‘{q}’에 대한 답변이 없습니다" + 문의하기 / 로딩 / 에러.
+- 데이터: Faq[](`GET /api/faqs?category=&q=`), FaqCategory[].
+- 반응형: 360–767 탭 가로 스크롤, 768–1023 동일, ≥1024 좌 카테고리 세로(3/12) + 우 아코디언(9/12).
+
+## 공지사항 (`/support/notices`, `/support/notices/:noticeId`)
+- 목록: 고정 공지(`isPinned`) 먼저 + 최신순, 행(분류 뱃지·제목·작성일·NEW 3일), 페이지네이션 10.
+- 상세: 제목·분류·작성일·본문(sanitize)·이전/다음 글·"목록으로"(이전 `page` 유지).
+- 상태: 목록 빈 "등록된 공지가 없습니다" / 상세 404 / 로딩 / 에러.
+- 데이터: `GET /api/notices?page=`, `GET /api/notices/:noticeId`.
+- 반응형: 360–767 행 2줄(분류+날짜 / 제목), 768–1023 한 줄 표형, ≥1024 본문 최대 760 가운데.
+
+---
+
+# ⑥ 약관/정책 + 404
+
+## 약관/정책 (`/policy/:policyType`)
+- 섹션: 1) 탭 3개(이용약관 / 개인정보처리방침 / 라이선스 정책) 2) 제목·시행일·이전 버전 Select(`?version=`) 3) 목차(h2/h3 자동 생성, 스크롤 스파이, Lenis 앵커) 4) 본문.
+- 라이선스 정책은 본문 앞에 LicenseType 3종 비교표(상세 모달과 같은 컴포넌트, 기준가 열 제외)를 먼저 보여준다.
+- 상태: 로딩 / 에러 / 알 수 없는 policyType → 404 / 본문 미등록(`content=null`) → "정책 문서를 준비 중입니다".
+- 데이터: PolicyDocument(`GET /api/policies/:policyType?version=`), LicenseType[](license일 때).
+- 반응형: 360–767 탭 가로 스크롤, 목차 → "목차" 버튼(바텀시트). 768–1023 동일. ≥1024 좌 목차(3/12 sticky) + 본문(9/12, 최대 760).
+- 가정: 원문은 운영자 제공 전까지 "초안" 워터마크 샘플. 온라인 결제가 없어 환불정책 탭은 두지 않는다(OQ-N2).
+
+## 404 (`*`)
+- 섹션: 큰 404 타이포 + "페이지를 찾을 수 없습니다" + CTA "홈으로" · "템플릿 둘러보기" + 템플릿 검색창 + 인기 템플릿 4개(실패 시 조용히 숨김).
+- 데이터: `GET /api/skins?sort=popular&pageSize=4`.
+- 반응형: 360–767 CTA 세로 전폭·인기 1열 2개, 768–1023 CTA 가로·인기 2열, ≥1024 인기 4열.
