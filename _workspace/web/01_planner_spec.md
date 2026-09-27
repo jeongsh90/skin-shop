@@ -92,32 +92,46 @@
 - 데이터: SiteInfo(`GET /api/site/info`), SiteStats(`GET /api/site/stats`).
 - 반응형: 360–767 링크 그룹 아코디언 + 사업자 정보 접힘. 768–1023 2×2. ≥1024 4열 + 좌 브랜드 블록.
 
+## 공통 플로팅 버튼 (화면 우측 하단 고정)
+> 변경(2026-09-27): 사용자 요청 "화면 우측하단 픽시드로 최상단이동, 문의하기".
+- 범위: 사용자 웹 전 페이지(WebLayout). 관리자·데모 미리보기(bare) 제외.
+- 구성(아래→위 세로 스택, 간격 일정): 
+  1) **맨 위로**: 클릭 → `lenis.scrollTo(0)`(reduced-motion이면 즉시). 스크롤 400px 이후에만 페이드 인, 최상단 근처에선 숨김. 이동 후 포커스는 본문 시작(skip 링크 대상)으로. `aria-label="맨 위로 이동"`.
+  2) **문의하기**: → `/contact`. 템플릿 상세에서는 현재 선택값을 붙여 `/contact?type=template_custom&template=&lang=&license=`. 항상 표시하되 `/contact`·`/contact/lookup`에서는 숨김(같은 페이지 중복). 포인트 컬러 강조. `aria-label="문의하기"`.
+- 동작: 모바일 메뉴·검색 오버레이·모달이 열리면 숨김. 푸터 영역에 닿으면 푸터 콘텐츠를 가리지 않도록 위로 밀려 멈춘다(또는 푸터 하단에 버튼 높이만큼 여백). 스크롤 연동 표시 여부는 `useLenis` 콜백에서 계산(별도 scroll 리스너 금지).
+- 레이어: 콘텐츠 위, 모달/Sheet/토스트 아래. 노이즈 오버레이는 pointer-events 없음이라 클릭 방해 없음.
+- 반응형: 360–767 아이콘만 44×44 원형(터치 타깃), 우 16px·하 16px + `env(safe-area-inset-bottom)`. 768–1023 동일 크기 우·하 24px. ≥1024 문의하기는 아이콘+텍스트 "문의하기" 알약형, 맨 위로는 아이콘 버튼, 우·하 32px.
+- 상태: 없음(정적 링크). 템플릿 상세 쿼리값이 없으면 기본 `/contact`.
+
 ## 공통 컴포넌트(①에서 먼저 만든다)
 - `NotFoundState`(홈 / 전체 템플릿 CTA), `ErrorState`, `EmptyState`, `PriceTag`(정가/기준가/할인율 + 선택 캡션), `PageHero`(브레드크럼·타이틀·리드, 선택 배경 비주얼), `CtaBand`(하단 문의 띠), `InkReveal`(§0-3), `NoiseOverlay`.
 - `SkinCard`(템플릿 카드): 썸네일(16:10, hover 시 `hoverImageUrl` 크로스페이드 — **리빌 미적용**), 업종명, 제목, 지원언어 칩(Skin.languages, 최대 3 + "+n", `lang` 필터에 걸린 언어 강조), "기준가 {Skin.minBasePrice}원부터", 배지(`NEW` 출시 30일 / `UPDATE` 14일 내 새 버전 / `BEST` Skin.isBest). 카드 클릭 → `/templates/:slug`, 우상단 "데모" 아이콘 → `/templates/:slug/preview`(stopPropagation). `lang` 필터가 있으면 두 링크에 겹치는 첫 언어를 `?lang=`로 붙인다.
 
 ## 메인 (`/`)
-- 목적: 4개 메뉴로의 진입을 한 화면에 담아 "템플릿으로 시작" / "처음부터 맞춤 제작" 중 자기 경로를 고르고 문의로 이어지게 한다.
+> 변경(2026-09-27): 사용자 지정 구성으로 전면 재작성 — ①히어로 ②템플릿소개(업종별 탭) ③이렇게 만듭니다 ④운영까지 편하게 ⑤마무리 문의 + 푸터. 이전의 고객 후기·신뢰 지표·인기/신규·개발 언어별·최근 업데이트 섹션은 삭제.
+
+- 목적: 히어로 다음에 바로 업종별 템플릿을 보여주고, 제작 방식·운영 기능으로 신뢰를 쌓은 뒤 문의로 이어지게 한다.
 - 섹션(위→아래):
-  1) **히어로 쇼케이스**: HomeBanner(`placement=hero`) 1~5개. 카피(제목·부제) + CTA "템플릿 보기"(skinSlug 있으면 상세, 없으면 `/templates`) / "제작 문의"(→ `/contact`). 우 디바이스 목업(PC+모바일). 2개 이상이면 6초 자동 전환(호버 정지). — 히어로는 첫 화면이라 리빌 대상 아님(진입 즉시 원색).
-  2) **About Us 진입 "이렇게 만듭니다"**: 제작방법 6단계 요약(ProcessStep, 정적) + "예상 비용 {PricingPlan(kind=production) 최저 price}원부터" 카드(→ `/about#pricing`) + 보조 링크 "검색등록"(`/about#seo`)·"유지보수"(`/about#maintenance`) + "제작방법 자세히"(→ `/about#process`). 좌측 대표 제작 사례 이미지 1장 **[리빌 후보]**.
-  3) **서비스소개 진입 "운영까지 편하게"**: ServiceFeature `isHighlighted` 6개 아이콘 그리드 → `/services#{slug}`, "전체 기능 보기". 우측 관리자 화면 스크린샷 1장 **[리빌 후보]**.
-  4) **템플릿소개 진입 — 업종별**: Category 카드 그리드(이름·템플릿 수·대표 이미지) → `/templates?industry=`. (카드 다수 → 리빌 비권장)
-  5) **인기/신규 템플릿**: 탭 "인기 / 신규"(`sort=popular|newest`) 8개 SkinCard + "전체 보기". (리빌 비권장)
-  6) **개발 언어별 진입**: Language 칩(아이콘·이름·템플릿 수, 0개 숨김) → `/templates?lang=`. 캡션 "원하는 언어가 없나요? 언어 버전 제작도 문의할 수 있어요"(→ `/contact?type=custom_dev`).
-  7) **최근 업데이트된 템플릿**: RecentUpdate 5건 — 템플릿명·언어·버전·출시일·첫 변경 → `/templates/:slug?lang={code}#changelog`.
-  8) **마무리 CTA 띠**(`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기" + 운영시간(SiteInfo.csHours).
-- 기능: 섹션별 독립 쿼리. 진입 모션은 섹션마다 다르게(동일 fade-up 반복 금지), 리빌 채택 섹션은 리빌 외 추가 모션 최소화.
-- 상태: 섹션별 스켈레톤 / 0건이면 섹션 숨김(히어로 0건은 정적 기본 카피+CTA) / 섹션별 작은 ErrorState. PricingPlan 실패 시 "예상 비용 보기" 링크만.
-- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), Category[], Skin[](`GET /api/skins?sort=popular|newest&pageSize=8`), Language[], RecentUpdate[](`GET /api/skins/updates/recent?limit=5`), SiteInfo.
+  1) **히어로**: HomeBanner(`placement=hero`) 1~5개. 카피(제목·부제) + CTA "템플릿 보기"(skinSlug 있으면 상세, 없으면 `/templates`) / "제작 문의"(→ `/contact`). 우 디바이스 목업(PC+모바일). 2개 이상이면 6초 자동 전환(호버·포커스 시 정지, 정지/재생 버튼 제공). 첫 화면이라 리빌 대상 아님.
+  2) **템플릿소개 — 업종별 탭**: 섹션 타이틀 + 업종 탭메뉴(Category, `sortOrder` 순, 템플릿 0개 업종 숨김, 첫 탭 "전체"). 탭 선택 시 해당 업종 SkinCard 8개(`GET /api/skins?category={slug}&sort=popular&pageSize=8`, "전체"는 category 없음) + "{업종명} 템플릿 전체 보기"(→ `/templates?industry={slug}`, 전체면 `/templates`).
+     - 탭 전환은 페이지 이동·URL 변경 없음(메인 내부 상태). 탭별 결과는 TanStack Query 캐시 — 한 번 본 탭은 즉시 표시, 인접 탭은 hover/focus 시 prefetch.
+     - 탭 전환 시 카드 영역 높이가 튀지 않게 최소 높이 유지(스켈레톤 8칸), 전환 후 Lenis `resize()`.
+     - 키보드: 좌우 화살표로 탭 이동(shadcn Tabs 기본 동작), 탭이 넘치면 가로 스크롤(`data-lenis-prevent`, 좌우 페이드 마스크).
+     - 선택 업종 0건 응답(데이터 불일치) → EmptyState "이 업종의 템플릿을 준비 중입니다" + "이 업종으로 제작 문의"(→ `/contact?type=production_quote`).
+     - 카드 다수 → 리빌 비권장.
+  3) **이렇게 만듭니다** (About Us 진입): 제작방법 6단계 요약(ProcessStep, 정적) + "예상 비용 {PricingPlan(kind=production) 최저 price}원부터" 카드(→ `/about#pricing`) + 보조 링크 "검색등록"(`/about#seo`)·"유지보수"(`/about#maintenance`) + "제작방법 자세히"(→ `/about#process`). 대표 제작 사례 이미지 1장 **[리빌 후보]**.
+  4) **운영까지 편하게** (서비스소개 진입): ServiceFeature `isHighlighted` 6개 아이콘 그리드 → `/services#{slug}`, "전체 기능 보기". 관리자 화면 스크린샷 1장 **[리빌 후보]**.
+  5) **마무리 문의** (`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기"(→ `/templates`) + 운영시간(SiteInfo.csHours).
+  - 이후 공통 푸터.
+- 기능: 섹션별 독립 쿼리. 진입 모션은 섹션마다 다르게(동일 fade-up 반복 금지), 리빌 채택 섹션은 리빌 외 추가 모션 최소화. 한 화면 동시 리빌 최대 2개(③·④는 떨어져 있어 충족).
+- 상태: 섹션별 스켈레톤 / 0건이면 섹션 숨김(히어로 0건은 정적 기본 카피+CTA, 업종 0개면 ② 전체를 "전체" 탭 하나로) / 섹션별 작은 ErrorState(재시도). PricingPlan 실패 시 "예상 비용 보기" 링크만.
+- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), Category[](`GET /api/categories`), Skin[](`GET /api/skins?category=&sort=popular&pageSize=8`), PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), SiteInfo.
 - 반응형:
-  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 스텝 세로 타임라인 + 비용 카드. 기능 2열. 업종 2열. 템플릿 1열(탭 세그먼트). 언어 칩 가로 스크롤.
-  - 768–1023: 히어로 2단(55/45). 스텝 3×2. 기능 3열. 업종 3열. 템플릿 2열.
-  - 1024–1439: 스텝 6개 가로 + 우 비용 카드. 업종 4열. 템플릿 3열.
-  - ≥1440: 템플릿 4열, 히어로 목업 확대.
-- 가정: ProcessStep은 프론트 정적 상수. 배너·하이라이트 기능·요금제는 관리자 필드.
-- > 변경(2026-09-27): 사용자 요청 "메인페이지 고객후기 제외" — 고객 후기 섹션 삭제, 섹션 번호 재정렬(마무리 CTA 띠 10→9).
-- > 변경(2026-09-27): 사용자 요청 "신뢰지표 제거" — 메인 신뢰 지표 띠 삭제, 섹션 번호 재정렬(총 8개). 푸터의 신뢰 요약은 유지.
+  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 업종 탭 가로 스크롤 + 템플릿 1열(8개 중 4개 노출 + "더 보기"로 나머지 펼침). 스텝 세로 타임라인 + 비용 카드. 기능 2열.
+  - 768–1023: 히어로 2단(55/45). 템플릿 2열. 스텝 3×2. 기능 3열.
+  - 1024–1439: 템플릿 3열(6개 노출 + 전체 보기, 8개는 2줄 4열이 되는 1440부터). 스텝 6개 가로 + 우 비용 카드. 기능 3열.
+  - ≥1440: 템플릿 4열 8개, 히어로 목업 확대.
+- 가정: ProcessStep은 프론트 정적 상수. 배너·하이라이트 기능·요금제·업종 순서는 관리자 필드. 탭 기본 선택은 "전체".
 
 ---
 

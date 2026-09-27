@@ -121,7 +121,7 @@ About Us(4섹션 앵커) / 서비스·템플릿(서비스소개·전체 템플�
 
 | 그룹 | 범위 | 라우트 |
 |---|---|---|
-| ① 공통 레이아웃 + 메인 | 헤더(GNB·메가메뉴·검색·테마), 모바일 메뉴, 푸터, 노이즈 오버레이, FOUC 방지 테마 스크립트, 공통 컴포넌트(`NotFoundState` `ErrorState` `EmptyState` `PriceTag` `SkinCard` `PageHero` `CtaBand` `InkReveal`), 리다이렉트 라우트 | `/`, 리다이렉트(`/about/*` `/skins/*` `/search` `/support` `/support/inquiry` `/policy`) |
+| ① 공통 레이아웃 + 메인 | 헤더(GNB·메가메뉴·검색·테마), 모바일 메뉴, 푸터, 노이즈 오버레이, 우측 하단 플로팅 버튼(맨 위로·문의하기), FOUC 방지 테마 스크립트, 공통 컴포넌트(`NotFoundState` `ErrorState` `EmptyState` `PriceTag` `SkinCard` `PageHero` `CtaBand` `InkReveal`), 리다이렉트 라우트 | `/`, 리다이렉트(`/about/*` `/skins/*` `/search` `/support` `/support/inquiry` `/policy`) |
 | ② About Us | 한 페이지 4섹션 + sticky 서브내비(스크롤 스파이) | `/about` |
 | ③ 서비스소개 | 기능 그룹·앵커·언어 매트릭스 | `/services` |
 | ④ 템플릿소개 | 목록·상세·데모 미리보기·언어 요청 모달 | `/templates`, `/templates/:slug`, `/templates/:slug/preview` |

@@ -350,13 +350,12 @@
 ### 카탈로그
 | 메서드·경로 | 요청 | 200 응답 | 사용처(화면 · 훅) |
 |---|---|---|---|
-| `GET /api/skins` | query: `category?`(웹 `industry` 매핑), `lang?`(콤마, OR), `platform?`(콤마, OR), `price?`(PriceRange), `responsive?`(`1`), `sort?`(기본 popular), `q?`(제목·태그라인·언어명·업종명), `page?`(1), `pageSize?`(24, 최대 48, `0`이면 items 빈 배열+total만) | `Paginated<Skin> & { facets: { categories: {slug,count}[]; languages: {code,count}[]; platforms: {code,count}[] } }` — facet은 해당 축 제외 나머지 필터 적용 | 템플릿 목록 · `useSkins(query)`; 메인 인기/신규 · `useSkins({sort,pageSize:8})`; 헤더 검색 · `useSkinSearch(q)`(5); 문의하기 참고 템플릿 · `useSkinSearch(q)`(8); 404·목록 빈 상태 추천 · `useSkins({sort:'popular',pageSize:4})`; About Us 최저 기준가 · `useSkins({sort:'price_asc',pageSize:1})` |
+| `GET /api/skins` | query: `category?`(웹 `industry` 매핑), `lang?`(콤마, OR), `platform?`(콤마, OR), `price?`(PriceRange), `responsive?`(`1`), `sort?`(기본 popular), `q?`(제목·태그라인·언어명·업종명), `page?`(1), `pageSize?`(24, 최대 48, `0`이면 items 빈 배열+total만) | `Paginated<Skin> & { facets: { categories: {slug,count}[]; languages: {code,count}[]; platforms: {code,count}[] } }` — facet은 해당 축 제외 나머지 필터 적용 | 템플릿 목록 · `useSkins(query)`; 메인 업종별 탭 · `useSkins({category,sort:'popular',pageSize:8})`; 헤더 검색 · `useSkinSearch(q)`(5); 문의하기 참고 템플릿 · `useSkinSearch(q)`(8); 404·목록 빈 상태 추천 · `useSkins({sort:'popular',pageSize:4})`; About Us 최저 기준가 · `useSkins({sort:'price_asc',pageSize:1})` |
 | `GET /api/skins/:slug` | — | `SkinDetail` (404: 없음/draft/hidden) | 템플릿 상세·데모 미리보기·문의하기 템플릿 요약 카드 · `useSkin(slug)` 캐시 `['skin', slug]` |
 | `GET /api/skins/:slug/versions?variantId=` | variantId 필수 | `{ items: SkinVersion[] }` 최신순 | 상세 업데이트 로그 전체 보기·언어 전환 · `useSkinVersions` |
 | `GET /api/skins/:slug/related?limit=4` | — | `{ items: Skin[] }` | 상세 관련 템플릿 · `useRelatedSkins` |
-| `GET /api/skins/updates/recent?limit=5` | — | `{ items: RecentUpdate[] }` | 메인 · `useRecentUpdates` |
-| `GET /api/categories` | — | `{ items: Category[] }` | 헤더 메가메뉴, 메인 업종, 목록 업종 탭, 문의하기 업종 Select · `useCategories` |
-| `GET /api/languages` | — | `{ items: Language[] }` | 헤더 메가메뉴, 메인 언어 진입, 목록 필터, 상세, 언어 요청 모달, 서비스소개 매트릭스, 문의하기 희망 언어 · `useLanguages` |
+| `GET /api/categories` | — | `{ items: Category[] }` | 헤더 메가메뉴, 메인 업종 탭, 목록 업종 탭, 문의하기 업종 Select · `useCategories` |
+| `GET /api/languages` | — | `{ items: Language[] }` | 헤더 메가메뉴, 목록 필터, 상세, 언어 요청 모달, 서비스소개 매트릭스, 문의하기 희망 언어 · `useLanguages` |
 | `GET /api/platforms` | — | `{ items: Platform[] }` | 목록 필터 · `usePlatforms` |
 | `GET /api/license-types` | — | `{ items: LicenseType[] }` | 상세 선택 패널·비교 모달, 문의하기 템플릿 요약, 라이선스 정책 · `useLicenseTypes` |
 
@@ -402,6 +401,7 @@
 | 2026-09-27 | 초안: 개발 지원언어로 SkinVariant/Language/LanguageRequest 도입 | 전 화면 |
 | 2026-09-27 | 사용자 요청 "메인페이지 고객후기 제외" — `Testimonial` 엔티티와 `GET /api/testimonials`를 §7 [보류]로 이동 | 메인 |
 | 2026-09-27 | 사용자 요청 "신뢰지표 제거" — 메인에서 `SiteStats` 사용 제거(푸터만 사용) | 메인 |
+| 2026-09-27 | 사용자 지정 메인 구성(히어로/업종별 탭/이렇게 만듭니다/운영까지 편하게/마무리 문의) — 메인에서 `Language`·`RecentUpdate` 사용 제거, `GET /api/skins/updates/recent` §7 [보류]로 이동. 업종 탭은 기존 `GET /api/skins?category=&sort=popular&pageSize=8` 재사용 | 메인 |
 
 ## 7. [보류] 웹 미사용 — 커머스 재도입 시 참조
 OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 이 목록을 출발점으로 이전 초안 설계(변경 이력 2026-09-27 초안)를 복원한다.
@@ -426,3 +426,6 @@ OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 �
 전 필드 **[관리자]**.
 
 엔드포인트(보류): | `GET /api/testimonials` | query: `featured?`(`1`), `limit?` | `{ items: Testimonial[] }` | 메인 고객 후기 · `useTestimonials` |
+
+### [보류] 최근 업데이트 목록 (메인 섹션 삭제, 2026-09-27)
+엔드포인트(보류): | `GET /api/skins/updates/recent?limit=5` | — | `{ items: RecentUpdate[] }` | 메인 · `useRecentUpdates` | — `RecentUpdate` 엔티티 정의는 위 본문에 유지(상세 업데이트 로그와 필드 공유 여부는 구현 시 확인)
