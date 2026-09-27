@@ -1,6 +1,6 @@
 ## 하네스: 홈페이지 스킨 판매 사이트 (다잇누몰)
 
-**목표:** React + shadcn/ui(+커뮤니티 레지스트리) + Lenis 스무스 스크롤로 스킨 판매 사용자 웹페이지 → 관리자페이지를 로컬(mock 데이터)로 완성한 뒤, 마지막에 서버를 연결·배포한다. 저장소는 GitHub `jeongsh90`.
+**목표:** React + shadcn/ui(+커뮤니티 레지스트리) + Lenis 스무스 스크롤로 스킨 판매 사용자 웹페이지 → 관리자페이지를 로컬(mock 데이터)로 완성한 뒤, 마지막에 서버를 연결·배포한다. 저장소는 GitHub https://github.com/jeongsh90/skin-shop (public, 기본 브랜치 main).
 
 **범위 주의:** 이 폴더는 상위 `D:\MyCloud`(파일 저장소 앱)와 별개 프로젝트다. 상위 CLAUDE.md의 `storage-app-orchestrator` 트리거·Andromeda 디자인 규칙은 이 폴더 작업에 적용하지 않는다. 단, 상위 `D:\MyCloud\.claude\RULES.md`의 작업 규칙(같은 버그 재발 시 patch 반복 금지·아키텍처 재검토, 자동화 테스트 통과 ≠ 실제 동작, 완료 보고 전 재검토, 한국어 응답)은 동일하게 따른다.
 

@@ -8,6 +8,7 @@ description: "다잇누몰 저장소의 git/GitHub(계정 jeongsh90) 운영 스�
 ## 현재 환경
 - `gh` CLI가 `jeongsh90` 계정으로 로그인돼 있음(HTTPS). 전역 git user.name=`jeongsh90`.
 - 작업 폴더: `d:\MyCloud\다잇누몰` — 상위 `D:\MyCloud`는 별개 프로젝트이므로 이 폴더를 독립 저장소로 둔다.
+- 원격: https://github.com/jeongsh90/skin-shop (public, origin/main) — 2026-09-28 생성. 공개 저장소이므로 비밀값·개인정보·제3자 저작물 커밋에 특히 주의.
 
 ## 초기화
 ```bash
