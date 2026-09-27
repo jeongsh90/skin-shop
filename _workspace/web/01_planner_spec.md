@@ -107,17 +107,17 @@
   6) **인기/신규 템플릿**: 탭 "인기 / 신규"(`sort=popular|newest`) 8개 SkinCard + "전체 보기". (리빌 비권장)
   7) **개발 언어별 진입**: Language 칩(아이콘·이름·템플릿 수, 0개 숨김) → `/templates?lang=`. 캡션 "원하는 언어가 없나요? 언어 버전 제작도 문의할 수 있어요"(→ `/contact?type=custom_dev`).
   8) **최근 업데이트된 템플릿**: RecentUpdate 5건 — 템플릿명·언어·버전·출시일·첫 변경 → `/templates/:slug?lang={code}#changelog`.
-  9) **고객 후기**: Testimonial `isFeatured` 최대 6개 캐러셀(제작 대행 고객 — 회사/업종·담당자 마스킹명·본문·관련 템플릿 링크(있을 때)).
-  10) **마무리 CTA 띠**(`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기" + 운영시간(SiteInfo.csHours).
+  9) **마무리 CTA 띠**(`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기" + 운영시간(SiteInfo.csHours).
 - 기능: 섹션별 독립 쿼리. 진입 모션은 섹션마다 다르게(동일 fade-up 반복 금지), 리빌 채택 섹션은 리빌 외 추가 모션 최소화.
 - 상태: 섹션별 스켈레톤 / 0건이면 섹션 숨김(히어로 0건은 정적 기본 카피+CTA) / 섹션별 작은 ErrorState. PricingPlan 실패 시 "예상 비용 보기" 링크만.
-- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), SiteStats, PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), Category[], Skin[](`GET /api/skins?sort=popular|newest&pageSize=8`), Language[], RecentUpdate[](`GET /api/skins/updates/recent?limit=5`), Testimonial[](`GET /api/testimonials?featured=1&limit=6`), SiteInfo.
+- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), SiteStats, PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), Category[], Skin[](`GET /api/skins?sort=popular|newest&pageSize=8`), Language[], RecentUpdate[](`GET /api/skins/updates/recent?limit=5`), SiteInfo.
 - 반응형:
-  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 지표 2×2. 스텝 세로 타임라인 + 비용 카드. 기능 2열. 업종 2열. 템플릿 1열(탭 세그먼트). 언어 칩 가로 스크롤. 후기 1장 스와이프.
-  - 768–1023: 히어로 2단(55/45). 지표 4개 한 줄. 스텝 3×2. 기능 3열. 업종 3열. 템플릿 2열. 후기 2장.
-  - 1024–1439: 스텝 6개 가로 + 우 비용 카드. 업종 4열. 템플릿 3열. 후기 3장.
+  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 지표 2×2. 스텝 세로 타임라인 + 비용 카드. 기능 2열. 업종 2열. 템플릿 1열(탭 세그먼트). 언어 칩 가로 스크롤.
+  - 768–1023: 히어로 2단(55/45). 지표 4개 한 줄. 스텝 3×2. 기능 3열. 업종 3열. 템플릿 2열.
+  - 1024–1439: 스텝 6개 가로 + 우 비용 카드. 업종 4열. 템플릿 3열.
   - ≥1440: 템플릿 4열, 히어로 목업 확대.
-- 가정: ProcessStep은 프론트 정적 상수. 배너·하이라이트 기능·요금제·후기는 관리자 필드.
+- 가정: ProcessStep은 프론트 정적 상수. 배너·하이라이트 기능·요금제는 관리자 필드.
+- > 변경(2026-09-27): 사용자 요청 "메인페이지 고객후기 제외" — 고객 후기 섹션 삭제, 섹션 번호 재정렬(마무리 CTA 띠 10→9).
 
 ---
 

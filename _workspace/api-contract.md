@@ -278,21 +278,6 @@
 
 전 필드 **[관리자]**. 제작방법 ProcessStep은 프론트 정적 상수(계약 밖).
 
-### Testimonial (고객 후기 — 관리자 입력)
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---|---|
-| id | string | Y | |
-| clientLabel | string | Y | 예 "○○치과 · 병원·의료" |
-| authorMaskedName | string | Y | "김*현 원장" |
-| content | string | Y | |
-| rating | 1\|2\|3\|4\|5 \| null | Y | 표시 선택 |
-| skinSlug | string \| null | Y | 관련 템플릿 링크 |
-| imageUrl | string \| null | Y | 완성 사이트 캡처 |
-| isFeatured | boolean | Y | |
-| createdAt | string | Y | |
-
-전 필드 **[관리자]**.
-
 ### Notice / NoticeDetail
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
@@ -385,7 +370,6 @@
 |---|---|---|---|
 | `GET /api/pricing-plans` | query: `kind?`(콤마 다중) | `{ items: PricingPlan[] }` | 메인(production), About Us(production,option,seo,maintenance), 문의하기 요금제 Select · `usePricingPlans(kind)` |
 | `GET /api/service-features` | query: `highlighted?`(`1`) | `{ groups: FeatureGroup[]; items: ServiceFeature[] }` | 서비스소개, 메인(highlighted), 문의하기 필요 기능 · `useServiceFeatures` |
-| `GET /api/testimonials` | query: `featured?`(`1`), `limit?` | `{ items: Testimonial[] }` | 메인 고객 후기 · `useTestimonials` |
 
 ### 문의
 | 메서드·경로 | 요청 | 200 응답 | 사용처 |
@@ -416,6 +400,7 @@
 | 2026-09-27 | 사용자 결정 반영(OQ-0 문의 중심 / OQ-A 동일가 / OQ-1 3종). 회원·구매 엔티티·엔드포인트를 §7 [보류]로 이동. `LicenseOption`을 `SkinVariant`→`SkinDetail`로 이동, `price`→`basePrice`, `Skin.minPrice`→`minBasePrice`, `salesCount`·`ratingAverage`·`reviewCount`·`isWishlisted`·`ownedLicenses` 제거, `popularityScore` 추가. `SkinVersion` 파일 필드 제거. `SkinImage.isHighlight`, `FeatureGroup.imageUrl`, `Testimonial`, `InquiryLookupResult`, `TemplateRequestScope`, `InquiryStatus` 추가. `LanguageRequest`를 이메일 기반으로(`notify`·`myRequestId`·`requestedByMe` 제거). InquiryType에서 purchase/download/refund 제거. PolicyType에서 refund 제거. mock 키 v2 | 전 화면 |
 | 2026-09-27 | GNB 반영: PricingPlan·FeatureGroup·ServiceFeature, 통합 Inquiry, Category=업종, SiteStats.completedProjects·SiteInfo.avgResponseHours | 메인, About Us, 서비스소개, 문의하기 |
 | 2026-09-27 | 초안: 개발 지원언어로 SkinVariant/Language/LanguageRequest 도입 | 전 화면 |
+| 2026-09-27 | 사용자 요청 "메인페이지 고객후기 제외" — `Testimonial` 엔티티와 `GET /api/testimonials`를 §7 [보류]로 이동 | 메인 |
 
 ## 7. [보류] 웹 미사용 — 커머스 재도입 시 참조
 OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 이 목록을 출발점으로 이전 초안 설계(변경 이력 2026-09-27 초안)를 복원한다.
@@ -423,3 +408,20 @@ OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 �
 - 엔드포인트: `/api/auth/*`, `/api/cart*`, `/api/checkout/preview`, `/api/payment-methods`, `/api/orders*`, `/api/me/*`, `/api/skins/:slug/reviews`, `/api/reviews/featured`, `/api/skins/:slug/questions`.
 - 필드: `SkinVersion.fileName`/`fileSize`/`guideUrl`, `Skin.salesCount`/`ratingAverage`/`reviewCount`, `LicenseType`의 다운로드 제한 개념.
 - 관리자(2단계)가 라이선스 판매·납품 파일을 관리해야 하면(예: 문의 → 계약 후 파일 전달) 그때 `License`/`SkinVersion` 파일 필드를 관리자 전용으로 되살린다(OQ-N1).
+
+### [보류] Testimonial (메인 고객 후기 — 사용자 요청으로 제외, 2026-09-27)
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| id | string | Y | |
+| clientLabel | string | Y | 예 "○○치과 · 병원·의료" |
+| authorMaskedName | string | Y | "김*현 원장" |
+| content | string | Y | |
+| rating | 1\|2\|3\|4\|5 \| null | Y | 표시 선택 |
+| skinSlug | string \| null | Y | 관련 템플릿 링크 |
+| imageUrl | string \| null | Y | 완성 사이트 캡처 |
+| isFeatured | boolean | Y | |
+| createdAt | string | Y | |
+
+전 필드 **[관리자]**.
+
+엔드포인트(보류): | `GET /api/testimonials` | query: `featured?`(`1`), `limit?` | `{ items: Testimonial[] }` | 메인 고객 후기 · `useTestimonials` |
