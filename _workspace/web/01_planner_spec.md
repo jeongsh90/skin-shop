@@ -100,24 +100,24 @@
 - 목적: 4개 메뉴로의 진입을 한 화면에 담아 "템플릿으로 시작" / "처음부터 맞춤 제작" 중 자기 경로를 고르고 문의로 이어지게 한다.
 - 섹션(위→아래):
   1) **히어로 쇼케이스**: HomeBanner(`placement=hero`) 1~5개. 카피(제목·부제) + CTA "템플릿 보기"(skinSlug 있으면 상세, 없으면 `/templates`) / "제작 문의"(→ `/contact`). 우 디바이스 목업(PC+모바일). 2개 이상이면 6초 자동 전환(호버 정지). — 히어로는 첫 화면이라 리빌 대상 아님(진입 즉시 원색).
-  2) **신뢰 지표 띠**: SiteStats{totalSkins, completedProjects, languageCount, updatesThisMonth} — 뷰포트 진입 시 1회 카운트업.
-  3) **About Us 진입 "이렇게 만듭니다"**: 제작방법 6단계 요약(ProcessStep, 정적) + "예상 비용 {PricingPlan(kind=production) 최저 price}원부터" 카드(→ `/about#pricing`) + 보조 링크 "검색등록"(`/about#seo`)·"유지보수"(`/about#maintenance`) + "제작방법 자세히"(→ `/about#process`). 좌측 대표 제작 사례 이미지 1장 **[리빌 후보]**.
-  4) **서비스소개 진입 "운영까지 편하게"**: ServiceFeature `isHighlighted` 6개 아이콘 그리드 → `/services#{slug}`, "전체 기능 보기". 우측 관리자 화면 스크린샷 1장 **[리빌 후보]**.
-  5) **템플릿소개 진입 — 업종별**: Category 카드 그리드(이름·템플릿 수·대표 이미지) → `/templates?industry=`. (카드 다수 → 리빌 비권장)
-  6) **인기/신규 템플릿**: 탭 "인기 / 신규"(`sort=popular|newest`) 8개 SkinCard + "전체 보기". (리빌 비권장)
-  7) **개발 언어별 진입**: Language 칩(아이콘·이름·템플릿 수, 0개 숨김) → `/templates?lang=`. 캡션 "원하는 언어가 없나요? 언어 버전 제작도 문의할 수 있어요"(→ `/contact?type=custom_dev`).
-  8) **최근 업데이트된 템플릿**: RecentUpdate 5건 — 템플릿명·언어·버전·출시일·첫 변경 → `/templates/:slug?lang={code}#changelog`.
-  9) **마무리 CTA 띠**(`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기" + 운영시간(SiteInfo.csHours).
+  2) **About Us 진입 "이렇게 만듭니다"**: 제작방법 6단계 요약(ProcessStep, 정적) + "예상 비용 {PricingPlan(kind=production) 최저 price}원부터" 카드(→ `/about#pricing`) + 보조 링크 "검색등록"(`/about#seo`)·"유지보수"(`/about#maintenance`) + "제작방법 자세히"(→ `/about#process`). 좌측 대표 제작 사례 이미지 1장 **[리빌 후보]**.
+  3) **서비스소개 진입 "운영까지 편하게"**: ServiceFeature `isHighlighted` 6개 아이콘 그리드 → `/services#{slug}`, "전체 기능 보기". 우측 관리자 화면 스크린샷 1장 **[리빌 후보]**.
+  4) **템플릿소개 진입 — 업종별**: Category 카드 그리드(이름·템플릿 수·대표 이미지) → `/templates?industry=`. (카드 다수 → 리빌 비권장)
+  5) **인기/신규 템플릿**: 탭 "인기 / 신규"(`sort=popular|newest`) 8개 SkinCard + "전체 보기". (리빌 비권장)
+  6) **개발 언어별 진입**: Language 칩(아이콘·이름·템플릿 수, 0개 숨김) → `/templates?lang=`. 캡션 "원하는 언어가 없나요? 언어 버전 제작도 문의할 수 있어요"(→ `/contact?type=custom_dev`).
+  7) **최근 업데이트된 템플릿**: RecentUpdate 5건 — 템플릿명·언어·버전·출시일·첫 변경 → `/templates/:slug?lang={code}#changelog`.
+  8) **마무리 CTA 띠**(`CtaBand`): "템플릿으로 시작하거나, 처음부터 맞춤 제작하세요" + "제작 견적 문의"(→ `/contact?type=production_quote`) / "템플릿 둘러보기" + 운영시간(SiteInfo.csHours).
 - 기능: 섹션별 독립 쿼리. 진입 모션은 섹션마다 다르게(동일 fade-up 반복 금지), 리빌 채택 섹션은 리빌 외 추가 모션 최소화.
 - 상태: 섹션별 스켈레톤 / 0건이면 섹션 숨김(히어로 0건은 정적 기본 카피+CTA) / 섹션별 작은 ErrorState. PricingPlan 실패 시 "예상 비용 보기" 링크만.
-- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), SiteStats, PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), Category[], Skin[](`GET /api/skins?sort=popular|newest&pageSize=8`), Language[], RecentUpdate[](`GET /api/skins/updates/recent?limit=5`), SiteInfo.
+- 데이터: HomeBanner[](`GET /api/home/banners?placement=hero`), PricingPlan[](`GET /api/pricing-plans?kind=production`), ServiceFeature[](`GET /api/service-features?highlighted=1`), Category[], Skin[](`GET /api/skins?sort=popular|newest&pageSize=8`), Language[], RecentUpdate[](`GET /api/skins/updates/recent?limit=5`), SiteInfo.
 - 반응형:
-  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 지표 2×2. 스텝 세로 타임라인 + 비용 카드. 기능 2열. 업종 2열. 템플릿 1열(탭 세그먼트). 언어 칩 가로 스크롤.
-  - 768–1023: 히어로 2단(55/45). 지표 4개 한 줄. 스텝 3×2. 기능 3열. 업종 3열. 템플릿 2열.
+  - 360–767: 히어로 카피 → 목업(모바일 프레임만), CTA 전폭 세로. 스텝 세로 타임라인 + 비용 카드. 기능 2열. 업종 2열. 템플릿 1열(탭 세그먼트). 언어 칩 가로 스크롤.
+  - 768–1023: 히어로 2단(55/45). 스텝 3×2. 기능 3열. 업종 3열. 템플릿 2열.
   - 1024–1439: 스텝 6개 가로 + 우 비용 카드. 업종 4열. 템플릿 3열.
   - ≥1440: 템플릿 4열, 히어로 목업 확대.
 - 가정: ProcessStep은 프론트 정적 상수. 배너·하이라이트 기능·요금제는 관리자 필드.
 - > 변경(2026-09-27): 사용자 요청 "메인페이지 고객후기 제외" — 고객 후기 섹션 삭제, 섹션 번호 재정렬(마무리 CTA 띠 10→9).
+- > 변경(2026-09-27): 사용자 요청 "신뢰지표 제거" — 메인 신뢰 지표 띠 삭제, 섹션 번호 재정렬(총 8개). 푸터의 신뢰 요약은 유지.
 
 ---
 

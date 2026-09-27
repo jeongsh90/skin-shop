@@ -386,7 +386,7 @@
 | `GET /api/notices/:noticeId` | — | `NoticeDetail` | 공지 상세 · `useNotice` |
 | `GET /api/policies/:policyType` | query: `version?` | `PolicyDocument` | 약관/정책, 문의하기·언어 요청 개인정보 동의 "보기" · `usePolicy` |
 | `GET /api/home/banners?placement=hero` | — | `{ items: HomeBanner[] }` | 메인 히어로, 헤더 메가메뉴 대표 카드 · `useHomeBanners` |
-| `GET /api/site/stats` | — | `SiteStats` | 메인, 푸터 · `useSiteStats` |
+| `GET /api/site/stats` | — | `SiteStats` | 푸터 · `useSiteStats` |
 | `GET /api/site/info` | — | `SiteInfo` | 푸터, 메인 CTA 띠, 문의하기 · `useSiteInfo` |
 
 ## 5. 캐시 키
@@ -401,6 +401,7 @@
 | 2026-09-27 | GNB 반영: PricingPlan·FeatureGroup·ServiceFeature, 통합 Inquiry, Category=업종, SiteStats.completedProjects·SiteInfo.avgResponseHours | 메인, About Us, 서비스소개, 문의하기 |
 | 2026-09-27 | 초안: 개발 지원언어로 SkinVariant/Language/LanguageRequest 도입 | 전 화면 |
 | 2026-09-27 | 사용자 요청 "메인페이지 고객후기 제외" — `Testimonial` 엔티티와 `GET /api/testimonials`를 §7 [보류]로 이동 | 메인 |
+| 2026-09-27 | 사용자 요청 "신뢰지표 제거" — 메인에서 `SiteStats` 사용 제거(푸터만 사용) | 메인 |
 
 ## 7. [보류] 웹 미사용 — 커머스 재도입 시 참조
 OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 이 목록을 출발점으로 이전 초안 설계(변경 이력 2026-09-27 초안)를 복원한다.
