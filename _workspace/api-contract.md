@@ -322,13 +322,9 @@
 | ctaLabel / ctaUrl | string \| null | Y | |
 | sortOrder / startsAt / endsAt / isActive | | Y | **[관리자]** (웹 응답은 활성·기간 내만) |
 
-### SiteStats / SiteInfo
+### SiteInfo
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
-| SiteStats.totalSkins | number | Y | |
-| SiteStats.completedProjects | number | Y | 제작 완료 건수 **[관리자]** |
-| SiteStats.languageCount | number | Y | 템플릿이 있는 언어 수 |
-| SiteStats.updatesThisMonth | number | Y | |
 | SiteInfo.siteName | string | Y | "다잇누몰" |
 | SiteInfo.companyName / ceoName / businessNumber / address | string | Y | **[관리자]** |
 | SiteInfo.csPhone / csEmail / csHours | string | Y | **[관리자]** |
@@ -385,7 +381,6 @@
 | `GET /api/notices/:noticeId` | — | `NoticeDetail` | 공지 상세 · `useNotice` |
 | `GET /api/policies/:policyType` | query: `version?` | `PolicyDocument` | 약관/정책, 문의하기·언어 요청 개인정보 동의 "보기" · `usePolicy` |
 | `GET /api/home/banners?placement=hero` | — | `{ items: HomeBanner[] }` | 메인 히어로, 헤더 메가메뉴 대표 카드 · `useHomeBanners` |
-| `GET /api/site/stats` | — | `SiteStats` | 푸터 · `useSiteStats` |
 | `GET /api/site/info` | — | `SiteInfo` | 푸터, 메인 CTA 띠, 문의하기 · `useSiteInfo` |
 
 ## 5. 캐시 키
@@ -402,6 +397,7 @@
 | 2026-09-27 | 사용자 요청 "메인페이지 고객후기 제외" — `Testimonial` 엔티티와 `GET /api/testimonials`를 §7 [보류]로 이동 | 메인 |
 | 2026-09-27 | 사용자 요청 "신뢰지표 제거" — 메인에서 `SiteStats` 사용 제거(푸터만 사용) | 메인 |
 | 2026-09-27 | 사용자 지정 메인 구성(히어로/업종별 탭/이렇게 만듭니다/운영까지 편하게/마무리 문의) — 메인에서 `Language`·`RecentUpdate` 사용 제거, `GET /api/skins/updates/recent` §7 [보류]로 이동. 업종 탭은 기존 `GET /api/skins?category=&sort=popular&pageSize=8` 재사용 | 메인 |
+| 2026-09-27 | 사용자 요청 — 푸터 신뢰 요약 제거로 `SiteStats`·`GET /api/site/stats` 사용처 0 → §7 [보류]로 이동 | 푸터 |
 
 ## 7. [보류] 웹 미사용 — 커머스 재도입 시 참조
 OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 이 목록을 출발점으로 이전 초안 설계(변경 이력 2026-09-27 초안)를 복원한다.
@@ -429,3 +425,12 @@ OQ-0 결정으로 웹 1단계에서 **구현하지 않는다**. 재도입 시 �
 
 ### [보류] 최근 업데이트 목록 (메인 섹션 삭제, 2026-09-27)
 엔드포인트(보류): | `GET /api/skins/updates/recent?limit=5` | — | `{ items: RecentUpdate[] }` | 메인 · `useRecentUpdates` | — `RecentUpdate` 엔티티 정의는 위 본문에 유지(상세 업데이트 로그와 필드 공유 여부는 구현 시 확인)
+
+### [보류] SiteStats (메인 신뢰 지표·푸터 신뢰 요약 제거, 2026-09-27)
+| 필드 | 타입 | 필수 | 설명 |
+|---|---|---|---|
+| totalSkins | number | Y | |
+| completedProjects | number | Y | 제작 완료 건수 **[관리자]** |
+| languageCount | number | Y | 템플릿이 있는 언어 수 |
+| updatesThisMonth | number | Y | |
+엔드포인트(보류): | `GET /api/site/stats` | — | `SiteStats` | 푸터 · `useSiteStats` |
